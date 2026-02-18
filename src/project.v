@@ -25,3 +25,157 @@ module tt_um_example (
   wire _unused = &{ena, clk, rst_n, 1'b0};
 
 endmodule
+
+// Code your design here
+module Register 
+  #(parameter WIDTH = 16)
+  (input logic [WIDTH - 1:0] D,
+   input logic clock, en, clear, 
+   output logic [WIDTH - 1:0] Q);
+
+  always_ff @(posedge clock) begin 
+    if (en)
+      Q <= D; 
+    else if (clear)
+      Q <= '0;
+  end
+endmodule 
+
+module MagComp
+  #(parameter WIDTH = 16)
+  (input logic [WIDTH - 1:0] A, B,
+   output logic AltB, AeqB, AgtB);
+
+  assign AltB = A < B;
+  assign AeqB = A == B; 
+  assign AgtB = A > B; 
+endmodule
+
+module RangeFinder
+   #(parameter WIDTH=16)
+    (input  logic [WIDTH-1:0] data_in,
+     input  logic             clock, reset,
+     input  logic             go, finish,
+     output logic [WIDTH-1:0] range,
+     output logic             error);
+
+     logic [WIDTH-1:0]max,min;
+     logic inStart, enMax, enMin;
+
+     RangeFinderDataPath datapath(data_in,clock,reset,inStart,enMax,enMin,go,finish,max,min);
+     RangeFinderFSM FSM(data_in, max, min, clock, reset, go , finish, range,final_max,final_min, error, inStart, enMax, enMin);
+endmodule: RangeFinder
+
+
+module RangeFinderDataPath
+   #(parameter WIDTH=16)
+    (input  logic [WIDTH-1:0] data_in,
+     input  logic             clock, reset,inStart, enMax,enMin,
+     input  logic             go, finish,
+     output logic [WIDTH-1:0] max, min);
+   
+    Register low(data_in,clock,inStart||enMin,1'b0,min);
+    Register high(data_in,clock,inStart||enMax,1'b0,max);
+endmodule: RangeFinderDataPath
+
+
+module RangeFinderFSM
+   #(parameter WIDTH=16)
+  (input  logic [WIDTH-1:0] data_in,max,min,
+   input  logic             clock, reset,
+   input  logic             go, finish,
+   output logic [WIDTH-1:0] range,final_max,final_min,
+   output logic             error,
+   output logic inStart, enMax,enMin);
+
+   enum logic [1:0] {START,CONTINUE, ERROR, DONE} currState, nextState;
+   // Output logic
+  always_comb begin 
+  error = 1'b0;
+  inStart=1'b0;
+  enMin=1'b0;
+  enMax=1'b0;
+
+  case (currState)
+    START: begin
+      if (go)
+        inStart=1'b1;
+    end
+     
+    ERROR: begin
+      error = 1'b1; 
+      if (go && !finish)
+        enMin= (data_in<min);
+        enMax= (data_in>max);
+         //inStart= 1'b1;
+    end
+     
+    CONTINUE: begin
+      enMin= (data_in<min);
+      enMax= (data_in>max);
+    end
+     
+    DONE: begin 
+    end
+    default: begin
+    end
+  endcase
+end
+
+    // Next State logic
+  always_comb begin 
+    case (currState)
+      START: begin
+      if (go && finish)
+         nextState=ERROR;
+      else if (finish)
+          nextState=ERROR;
+      else if (go)
+           nextState=CONTINUE;
+      end 
+
+      CONTINUE: begin
+      if (go)
+         nextState=ERROR;
+      else if (finish)
+         nextState=DONE;
+      else
+         nextState=CONTINUE;
+      end 
+
+      ERROR: begin
+      if (go && !finish)
+         nextState= CONTINUE;
+      else 
+         nextState= ERROR;
+      end
+      
+      DONE: begin
+      nextState= START;
+      end
+
+      default: begin
+      nextState=START;
+      end
+    endcase
+   
+  end
+   
+  always_ff @(posedge clock) begin
+    if (reset) begin 
+      currState <= START ;
+    end
+    else begin
+      currState <= nextState ;
+    end
+  end
+   
+  assign final_max = (data_in > max) ? data_in : max;
+  assign final_min = (data_in < min) ? data_in : min;
+  always_ff @(posedge clock or posedge reset) begin
+  if (reset)
+    range <= '0;
+  else if (currState == CONTINUE && finish)
+    range <= final_max - final_min;
+end
+  endmodule
