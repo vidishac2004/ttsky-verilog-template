@@ -21,7 +21,7 @@ module tt_um_example (
 
 
     RangeFinder #(.WIDTH(8)) RF(.data_in(ui_in), .clock(clk), .reset(~rst_n), .go(uio_oe[7]), .finish(uio_oe[6]),
-                                .range(ou_out),.error(uio_oe[5]));
+                                .range(uo_out),.error(uio_oe[5]));
 
   // List all unused inputs to prevent warnings
   wire _unused = &{ena, clk, rst_n, 1'b0};
