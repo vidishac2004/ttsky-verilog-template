@@ -63,8 +63,8 @@ module RangeFinder
      output logic [WIDTH-1:0] range,
      output logic             error);
 
-     logic [WIDTH-1:0]max,min;
-     logic inStart, enMax, enMin;
+     wire [WIDTH-1:0]max,min;
+     wire inStart, enMax, enMin;
 
     RangeFinderDataPath #(.WIDTH(WIDTH)) datapath(data_in,clock,reset,inStart,enMax,enMin,max,min);
     RangeFinderFSM #(.WIDTH(WIDTH)) FSM(data_in, max, min, clock, reset, go , finish, range, error, inStart, enMax, enMin);
