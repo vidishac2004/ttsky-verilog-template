@@ -63,6 +63,8 @@ module RangeFinder
 
      logic [WIDTH-1:0]max,min;
      logic inStart, enMax, enMin;
+     logic [WIDTH-1:0] final_max;
+     logic [WIDTH-1:0] final_min;
 
      RangeFinderDataPath datapath(data_in,clock,reset,inStart,enMax,enMin,go,finish,max,min);
      RangeFinderFSM FSM(data_in, max, min, clock, reset, go , finish, range,final_max,final_min, error, inStart, enMax, enMin);
@@ -106,10 +108,11 @@ module RangeFinderFSM
      
     ERROR: begin
       error = 1'b1; 
-      if (go && !finish)
+        if (go && !finish) begin
         enMin= (data_in<min);
         enMax= (data_in>max);
          //inStart= 1'b1;
+        end 
     end
      
     CONTINUE: begin
