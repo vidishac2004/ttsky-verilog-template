@@ -30,7 +30,7 @@ endmodule
 
 // Code your design here
 module Register 
-  #(parameter WIDTH = 16)
+    #(parameter WIDTH = 8)
   (input logic [WIDTH - 1:0] D,
    input logic clock, en, clear, 
    output logic [WIDTH - 1:0] Q);
@@ -44,7 +44,7 @@ module Register
 endmodule 
 
 module MagComp
-  #(parameter WIDTH = 16)
+    #(parameter WIDTH = 8)
   (input logic [WIDTH - 1:0] A, B,
    output logic AltB, AeqB, AgtB);
 
@@ -54,7 +54,7 @@ module MagComp
 endmodule
 
 module RangeFinder
-   #(parameter WIDTH=16)
+    #(parameter WIDTH=8)
     (input  logic [WIDTH-1:0] data_in,
      input  logic             clock, reset,
      input  logic             go, finish,
@@ -72,7 +72,7 @@ endmodule: RangeFinder
 
 
 module RangeFinderDataPath
-   #(parameter WIDTH=16)
+    #(parameter WIDTH=8)
     (input  logic [WIDTH-1:0] data_in,
      input  logic             clock, reset,inStart, enMax,enMin,
      input  logic             go, finish,
@@ -84,7 +84,7 @@ endmodule: RangeFinderDataPath
 
 
 module RangeFinderFSM
-   #(parameter WIDTH=16)
+    #(parameter WIDTH=8)
   (input  logic [WIDTH-1:0] data_in,max,min,
    input  logic             clock, reset,
    input  logic             go, finish,
@@ -129,6 +129,7 @@ end
 
     // Next State logic
   always_comb begin 
+    nextState = currState;
     case (currState)
       START: begin
       if (go && finish)
@@ -177,7 +178,7 @@ end
    
   assign final_max = (data_in > max) ? data_in : max;
   assign final_min = (data_in < min) ? data_in : min;
-  always_ff @(posedge clock or posedge reset) begin
+  always_ff @(posedge clock) begin
   if (reset)
     range <= '0;
   else if (currState == CONTINUE && finish)
