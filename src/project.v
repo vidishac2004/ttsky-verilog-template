@@ -66,7 +66,7 @@ module RangeFinder
      wire [WIDTH-1:0]max,min;
      wire inStart, enMax, enMin;
 
-    RangeFinderDataPath #(.WIDTH(WIDTH)) datapath(data_in,clock,reset,inStart,enMax,enMin,max,min);
+    RangeFinderDataPath #(.WIDTH(WIDTH)) datapath(.data_in(data_in),.clock(clock),.inStart(inStart),.enMax(enMax),.enMin(enMin),.max(max),.min(min));
     RangeFinderFSM #(.WIDTH(WIDTH)) FSM(data_in, max, min, clock, reset, go , finish, range, error, inStart, enMax, enMin);
 endmodule: RangeFinder
 
