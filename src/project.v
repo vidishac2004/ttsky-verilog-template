@@ -17,19 +17,14 @@ module tt_um_example (
 );
 
   // All output pins must be assigned. If not used, assign to 0.
-    assign uio_oe[0]=1'b0;
-    assign uio_oe[1]=1'b0;
-    assign uio_oe[2]=1'b1;
-    assign uio_oe[3]=1'b0;
-    assign uio_oe[4]=1'b0;
-    assign uio_oe[5]=1'b0;
-    assign uio_oe[6]=1'b0;
-    assign uio_oe[7]=1'b0;
+    assign uio_oe = 8'b00000100;
+    assign uio_out= 8'b00000000;
+    logic errorRF;
 
 
     RangeFinder #(.WIDTH(8)) RF(.data_in(ui_in), .clock(clk), .reset(~rst_n), .go(uio_in[0]), .finish(uio_in[1]),
-                                .range(uo_out),.error(uio_out[2]));
-
+                                .range(uo_out),.error(errorRF));
+    assign uio_out[2]= errorRF;
   // List all unused inputs to prevent warnings
   wire _unused = &{ena, clk, rst_n, 1'b0};
 
@@ -71,8 +66,8 @@ module RangeFinder
      logic [WIDTH-1:0]max,min;
      logic inStart, enMax, enMin;
 
-    RangeFinderDataPath datapath(data_in,clock,reset,inStart,enMax,enMin,max,min);
-     RangeFinderFSM FSM(data_in, max, min, clock, reset, go , finish, range, error, inStart, enMax, enMin);
+    RangeFinderDataPath #(.WIDTH(WIDTH)) datapath(data_in,clock,reset,inStart,enMax,enMin,max,min);
+    RangeFinderFSM #(.WIDTH(WIDTH)) FSM(data_in, max, min, clock, reset, go , finish, range, error, inStart, enMax, enMin);
 endmodule: RangeFinder
 
 
