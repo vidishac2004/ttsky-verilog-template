@@ -20,8 +20,8 @@ module tt_um_example (
     assign uio_oe  = 8'b00100000;
 
 
-    RangeFinder #(.WIDTH(8)) RF(.data_in(ui_in), .clock(clk), .reset(~rst_n), .go(uio_oe[7]), .finish(uio_oe[6]),
-                                .range(uo_out),.error(uio_oe[5]));
+    RangeFinder #(.WIDTH(8)) RF(.data_in(ui_in), .clock(clk), .reset(~rst_n), .go(uio_in[7]), .finish(uio_in[6]),
+                                .range(uo_out),.error(uio_out[5]));
 
   // List all unused inputs to prevent warnings
   wire _unused = &{ena, clk, rst_n, 1'b0};
@@ -63,20 +63,19 @@ module RangeFinder
 
      logic [WIDTH-1:0]max,min;
      logic inStart, enMax, enMin;
-     logic [WIDTH-1:0] final_max;
-     logic [WIDTH-1:0] final_min;
 
-     RangeFinderDataPath datapath(data_in,clock,reset,inStart,enMax,enMin,go,finish,max,min);
-     RangeFinderFSM FSM(data_in, max, min, clock, reset, go , finish, range,final_max,final_min, error, inStart, enMax, enMin);
+    RangeFinderDataPath datapath(data_in,clock,reset,inStart,enMax,enMin,max,min);
+     RangeFinderFSM FSM(data_in, max, min, clock, reset, go , finish, range, error, inStart, enMax, enMin);
 endmodule: RangeFinder
 
 
 module RangeFinderDataPath
-    #(parameter WIDTH=8)
-    (input  logic [WIDTH-1:0] data_in,
-     input  logic             clock, reset,inStart, enMax,enMin,
-     input  logic             go, finish,
-     output logic [WIDTH-1:0] max, min);
+  #(parameter WIDTH=16)
+   (input  logic [WIDTH-1:0] data_in,
+    input  logic             clock,
+    input  logic             inStart, enMax, enMin,
+    output logic [WIDTH-1:0] max, min);
+    
    
     Register low(data_in,clock,inStart||enMin,1'b0,min);
     Register high(data_in,clock,inStart||enMax,1'b0,max);
@@ -88,10 +87,13 @@ module RangeFinderFSM
   (input  logic [WIDTH-1:0] data_in,max,min,
    input  logic             clock, reset,
    input  logic             go, finish,
-   output logic [WIDTH-1:0] range,final_max,final_min,
+   output logic [WIDTH-1:0] range,
    output logic             error,
    output logic inStart, enMax,enMin);
 
+    logic [WIDTH-1:0] final_max;
+     logic [WIDTH-1:0] final_min;
+    
    enum logic [1:0] {START,CONTINUE, ERROR, DONE} currState, nextState;
    // Output logic
   always_comb begin 
